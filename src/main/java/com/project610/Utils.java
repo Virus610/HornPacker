@@ -29,4 +29,9 @@ public class Utils {
         component.setPreferredSize(new Dimension(w, h));
         return component;
     }
+
+    public static Component maxSize(Component component, int w, int h) {
+        component.setMaximumSize(new Dimension(w, h));
+        return component;
+    }
 }
