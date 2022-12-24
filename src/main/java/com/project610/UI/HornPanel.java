@@ -1,22 +1,27 @@
 package com.project610.UI;
 
-import com.project610.Utils;
+import com.project610.Utils.Utils;
 
-import javax.sound.sampled.*;
 import javax.swing.*;
-import java.applet.AudioClip;
 import java.awt.*;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-import static com.project610.Utils.hbox;
+import static com.project610.Utils.Utils.hbox;
+
+
+import java.io.File;
+
+import static javax.sound.sampled.AudioSystem.getAudioInputStream;
+
 
 public class HornPanel extends JPanel {
     public File file;
     public String name, info, extags;
     public MainPanel parent;
+
+    public JButton deleteButton, previewButton;
+    public JTextField nameField, infoField, extagsField;
 
     public HornPanel(MainPanel parent, File file) {
         this(parent, file, "", "", "");
@@ -45,27 +50,71 @@ public class HornPanel extends JPanel {
         JPanel fieldsPanel = hbox();
         add(fieldsPanel);
 
-        JButton deleteButton = new JButton("❌");
+        deleteButton = new JButton("❌");
         deleteButton.addActionListener(e -> parent.deleteHorn(this));
+        deleteButton.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    changeRecord("deleteButton", -1);
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    changeRecord("deleteButton", 1);
+                } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    changeRecord("previewButton", 0);
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
         fieldsPanel.add(Utils.prefSize(deleteButton, 44, 44));
 
         fieldsPanel.add(Box.createRigidArea(new Dimension(10,1)));
-        JButton previewButton = new JButton("🔊");
-        previewButton.addActionListener(e -> previewHorn());
+        previewButton = new JButton("🔊");
+        previewButton.addActionListener(e -> Player.play(file.getPath()));
+        previewButton.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    changeRecord("previewButton", -1);
+                } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    changeRecord("previewButton", 1);
+                } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    changeRecord("deleteButton", 0);
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
         fieldsPanel.add(Utils.prefSize(previewButton,44, 44));
 
         fieldsPanel.add(new JLabel("  Name:"));
-        JTextField nameField = new JTextField(name, 6);
+        nameField = new JTextField(name, 6);
         nameField.addKeyListener(new LazyDataBinding(this, "name"));
         fieldsPanel.add(nameField);
 
         fieldsPanel.add(new JLabel("  Info:"));
-        JTextField infoField = new JTextField(info, 40);
+        infoField = new JTextField(info, 40);
         infoField.addKeyListener(new LazyDataBinding(this, "info"));
         fieldsPanel.add(infoField);
 
         fieldsPanel.add(new JLabel("  ExTags:"));
-        JTextField extagsField = new JTextField(extags, 20);
+        extagsField = new JTextField(extags, 20);
         extagsField.addKeyListener(new LazyDataBinding(this, "extags"));
         fieldsPanel.add(extagsField);
 
@@ -74,40 +123,18 @@ public class HornPanel extends JPanel {
         add(Box.createRigidArea(new Dimension(1, 5)));
     }
 
-    private void previewHorn() {
-
+    public void changeRecord(String componentName, int direction) {
         try {
-            for (AudioFileFormat.Type type : AudioSystem.getAudioFileTypes()) {
-                System.out.println("Type: " + type.getExtension());
+            HornPanel newPanel = parent.hornList.get(parent.hornList.indexOf(this) + direction);
+            switch (componentName) {
+                case "deleteButton":
+                    newPanel.deleteButton.grabFocus();
+                    break;
+                case "previewButton":
+                    newPanel.previewButton.grabFocus();
+                    break;
+                default:
             }
-            BufferedInputStream soundFile;
-            Clip clip;
-            AudioInputStream stream;
-
-            AudioFormat format;
-            DataLine.Info info;
-
-            InputStream is = new FileInputStream(file.getPath());
-            soundFile = new BufferedInputStream(is);
-
-            stream = AudioSystem.getAudioInputStream(soundFile);
-            format = stream.getFormat();
-            info = new DataLine.Info(Clip.class, format);
-            clip = (Clip) AudioSystem.getLine(info);
-            clip.open(stream);
-
-            // Play sound, then wait to proceed until it's done
-            clip.start();
-            while (clip.getMicrosecondLength() != clip.getMicrosecondPosition()) {
-                Thread.sleep(1);
-            }
-            clip.close();
-            soundFile.close();
-            is.close();
-
-        } catch (Exception ex) {
-            System.err.println("Audio error");
-            ex.printStackTrace();
-        }
+        } catch (IndexOutOfBoundsException ex) {}
     }
 }

@@ -1,4 +1,4 @@
-package com.project610;
+package com.project610.Utils;
 
 import javax.swing.*;
 import java.awt.*;
